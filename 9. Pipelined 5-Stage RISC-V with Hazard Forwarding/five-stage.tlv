@@ -10,7 +10,6 @@
                      >>1$taken_br  ? >>1$br_tgt :
                                      >>1$pc + 32'd4;
          
-         // Hardcoded program memory
          $instr[31:0] = ($pc[3:0] == 4'h0) ? 32'h00500093 :
                         ($pc[3:0] == 4'h4) ? 32'h00A00113 :
                         ($pc[3:0] == 4'h8) ? 32'h002081B3 :
