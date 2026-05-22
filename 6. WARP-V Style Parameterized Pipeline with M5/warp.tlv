@@ -2,8 +2,6 @@
 \SV
    m4_makerchip_module
 \TLV
-   // M5 parameter: change this number to change pipeline depth
-   // Try changing 4 to 6 and recompiling — diagram auto-updates!
    m4_define(['M4_PIPE_DEPTH'], 4)
    m4_define(['M4_WIDTH'], 16)
    
