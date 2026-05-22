@@ -6,19 +6,16 @@
       @1
          $reset = *reset;
          
-         // Deterministic stimulus: rotating request pattern
          $req[3:0] = $reset   ? 4'b0 :
                      (*cyc_cnt[1:0] == 2'b00) ? 4'b0001 :
                      (*cyc_cnt[1:0] == 2'b01) ? 4'b0110 :
                      (*cyc_cnt[1:0] == 2'b10) ? 4'b1111 :
                                                  4'b1010 ;
          
-         // Priority pointer — advances after each grant
          $priority[1:0] = $reset    ? 2'b0 :
                           $granted  ? >>1$priority + 1 :
                                       >>1$priority;
          
-         // Check each slot starting from priority (wrap around)
          $p0[1:0] = $priority;
          $p1[1:0] = $priority + 2'b01;
          $p2[1:0] = $priority + 2'b10;
