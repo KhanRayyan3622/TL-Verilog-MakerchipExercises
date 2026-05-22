@@ -2,8 +2,6 @@
 \SV
    m4_makerchip_module
 \TLV
-   // CRC-8 using polynomial x^8 + x^2 + x + 1
-   // Processes one bit per cycle
    
    |crc
       @1
@@ -13,14 +11,13 @@
          
       ?$valid
          @1
-            // CRC shift register with polynomial feedback
             $xor_bit = $data_in ^ >>1$crc[7];
             
-            $crc[7:0] = $reset ? 8'hFF :   // init to all ones
-               {>>1$crc[6:0], 1'b0}        // shift left
-               ^ ($xor_bit ? 8'h07 : 8'h00); // XOR polynomial if feedback=1
+            $crc[7:0] = $reset ? 8'hFF :
+               {>>1$crc[6:0], 1'b0}
+               ^ ($xor_bit ? 8'h07 : 8'h00);
             
-            $crc_valid = ($crc == 8'h00);  // zero remainder = no errors
+            $crc_valid = ($crc == 8'h00);
    
    *passed = *cyc_cnt > 120;
    *failed = 1'b0;
