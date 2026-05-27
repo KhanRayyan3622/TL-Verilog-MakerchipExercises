@@ -2,43 +2,33 @@
 \SV
    m4_makerchip_module
 \TLV
-   |cpu
+   |cpu_pipe
       @1
+         // IF — Instruction Fetch
          $reset = *reset;
-         
-         $pc[31:0] = $reset        ? 32'b0 :
-                     >>1$taken_br  ? >>1$br_tgt :
-                                     >>1$pc + 32'd4;
-         
-         $instr[31:0] = ($pc[3:0] == 4'h0) ? 32'h00500093 :
-                        ($pc[3:0] == 4'h4) ? 32'h00A00113 :
-                        ($pc[3:0] == 4'h8) ? 32'h002081B3 :
-                        ($pc[3:0] == 4'hC) ? 32'hFE000AE3 :
-                                             32'h00000013;
-         
-         $is_r = ($instr[6:0] == 7'b0110011);
-         $is_i = ($instr[6:0] == 7'b0010011);
-         $is_b = ($instr[6:0] == 7'b1100011);
-         
-         $rs1[4:0] = $instr[19:15];
-         $rs2[4:0] = $instr[24:20];
-         $rd[4:0]  = $instr[11:7];
-         $imm[31:0] = {{20{$instr[31]}}, $instr[31:20]};
-         $funct3[2:0] = $instr[14:12];
-         `BOGUS_USE($funct3)
+         $pc[31:0] = $reset ? 32'b0 : >>1$pc + 32'd4;
+         $instr[7:0] = *cyc_cnt[7:0];   // simulated instruction
          
       @2
-         $fwd_a = (>>1$rd == $rs1) && (>>1$rd != 5'b0) && >>1$is_r;
-         $fwd_b = (>>1$rd == $rs2) && (>>1$rd != 5'b0) && >>1$is_r;
+         // ID — Instruction Decode
+         $opcode[1:0] = $instr[1:0];
+         $operand[5:0] = $instr[7:2];
          
-         $op_a[31:0] = $fwd_a   ? >>1$result : 32'b0;
-         $op_b[31:0] = $fwd_b   ? >>1$result :
-                       $is_i    ? $imm        : 32'b0;
+      @3
+         // EX — Execute
+         $alu_out[7:0] = ($opcode == 2'b00) ? {2'b0, $operand} + 8'd1  :
+                         ($opcode == 2'b01) ? {2'b0, $operand} - 8'd1  :
+                         ($opcode == 2'b10) ? {2'b0, $operand} << 1    :
+                                              {2'b0, $operand} >> 1    ;
+      @4
+         // MEM — Memory Access (simulated)
+         $mem_data[7:0] = $alu_out;   // pass through (no actual memory)
+         $mem_valid = ($opcode == 2'b00);
          
-         $result[31:0] = ($is_i || $is_r) ? $op_a + $op_b : 32'b0;
-         
-         $taken_br = $is_b && ($op_a == $op_b);
-         $br_tgt[31:0] = >>1$pc + $imm;
+      @5
+         // WB — Write Back
+         $wb_data[7:0] = $mem_data;
+         $wb_valid = $mem_valid;
    
    *passed = *cyc_cnt > 60;
    *failed = 1'b0;
